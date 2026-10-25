@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './lib/auth'
 import { ProgressProvider } from './lib/progress'
 import Admin from './pages/Admin'
 import Dashboard from './pages/Dashboard'
+import Genuinity from './pages/Genuinity'
 import Home from './pages/Home'
 import Label from './pages/Label'
 import Leaderboard from './pages/Leaderboard'
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/label" element={<RequireUser><Label /></RequireUser>} />
             <Route path="/settings" element={<RequireUser><Settings /></RequireUser>} />
             <Route path="/admin" element={<RequireUser admin><Admin /></RequireUser>} />
+            <Route path="/genuinity" element={<RequireUser admin><Genuinity /></RequireUser>} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/u/:username" element={<Profile />} />
             <Route path="/profile" element={<RequireUser><MyProfile /></RequireUser>} />
