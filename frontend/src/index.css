@@ -1,0 +1,288 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Friendly and chunky: Geist, 2px borders, buttons that
+   sit on a darker edge and press down, one violet for everything you act on.
+   No gradients, no glass, no soft shadows. Light is the default; dark through
+   the toggle ([data-theme]).
+--------------------------------------------------------------------------- */
+:root {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f6f5fa;
+  --surface-hover: #efeef6;
+  --surface-raised: #ffffff;
+
+  --border: #e6e4ef;
+  --border-strong: #d6d3e3;
+
+  --text: #3b3a4a;
+  --text-secondary: #6f6d82;
+  --text-muted: #a09eb3;
+  --text-inverse: #ffffff;
+
+  --brand: #7c5cff;
+  --brand-dark: #6142e6;      /* the edge a brand button sits on */
+  --brand-soft: #f1edff;
+  --brand-border: #cbbfff;
+
+  --danger: #ea4b5b;
+  --danger-dark: #c93444;
+  --danger-bg: #fff0f2;
+  --danger-border: #ffc7cf;
+  --ok: #2fa84f;
+  --ok-dark: #23893e;
+  --ok-soft: #e9f9ee;
+  --ring-green: #4cc764;
+
+  --focus-ring: #7c5cff;
+
+  /* contribution graph: empty, then four steps of the accent */
+  --hm-0: #efeef6;
+  --hm-1: #d9d0ff;
+  --hm-2: #b3a1ff;
+  --hm-3: #8c70ff;
+  --hm-4: #5b3be0;
+
+  --folder: #f2d38a;
+  --folder-edge: #c79b3b;
+  --paper: #fbf8ef;
+
+  --topbar-height: 64px;
+}
+
+:root[data-theme="dark"] {
+  --canvas: #16151f;
+  --surface: #1d1c29;
+  --surface-muted: #23222f;
+  --surface-hover: #2a2938;
+  --surface-raised: #242332;
+
+  --border: #343244;
+  --border-strong: #423f55;
+
+  --text: #f1f0f8;
+  --text-secondary: #b3b1c6;
+  --text-muted: #7f7d94;
+  --text-inverse: #16151f;
+
+  --brand: #9b85ff;
+  --brand-dark: #7559f0;
+  --brand-soft: #2a2446;
+  --brand-border: #4f4385;
+
+  --danger: #ff6b7a;
+  --danger-dark: #d94a5a;
+  --danger-bg: #2c1519;
+  --danger-border: #5a2730;
+  --ok: #55d475;
+  --ok-dark: #3cae5b;
+  --ok-soft: #162b1d;
+  --ring-green: #55d475;
+
+  --focus-ring: #9b85ff;
+
+  --hm-0: #2a2938;
+  --hm-1: #3a3166;
+  --hm-2: #5641a8;
+  --hm-3: #7a5ff0;
+  --hm-4: #b3a1ff;
+
+  --folder: #8a7340;
+  --folder-edge: #c7a65a;
+  --paper: #222130;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-raised: var(--surface-raised);
+  --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+  --color-ink-inverse: var(--text-inverse);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-border: var(--brand-border);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-ok: var(--ok);
+  --color-ok-dark: var(--ok-dark);
+  --color-ok-soft: var(--ok-soft);
+  --color-danger-dark: var(--danger-dark);
+  --font-sans: "Geist Variable", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body {
+  background: var(--canvas);
+  color: var(--text);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus treatment for every interactive element. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+/* Theme-conditional markup (the toggle's icon), right in the first paint. */
+.theme-when-dark {
+  display: none;
+}
+:root[data-theme="dark"] .theme-when-dark {
+  display: initial;
+}
+:root[data-theme="dark"] .theme-when-light {
+  display: none;
+}
+
+.hm-0 { fill: var(--hm-0); }
+.hm-1 { fill: var(--hm-1); }
+.hm-2 { fill: var(--hm-2); }
+.hm-3 { fill: var(--hm-3); }
+.hm-4 { fill: var(--hm-4); }
+
+.scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-slim::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+.scroll-slim::-webkit-scrollbar-track { background: transparent; }
+
+/* the play button breathes while the clip plays */
+@keyframes play-ring {
+  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--brand) 14%, transparent); }
+}
+.play-ring { animation: play-ring 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .play-ring { animation: none; }
+}
+
+/* "Humming" outline: a slow arc of the accent travels round a hairline pill, with a soft breathing glow. */
+@property --hum-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.hum {
+  border-radius: 999px;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--hum-angle),
+    var(--border-strong) 0deg,
+    color-mix(in srgb, var(--brand) 60%, var(--border-strong)) 30deg,
+    var(--brand) 75deg,
+    color-mix(in srgb, var(--brand) 60%, var(--border-strong)) 120deg,
+    var(--border-strong) 165deg,
+    var(--border-strong) 360deg
+  );
+  animation: hum-spin 3.6s linear infinite, hum-glow 2.6s ease-in-out infinite;
+}
+.hum > * {
+  border-radius: 999px;
+  background: var(--surface);
+}
+@keyframes hum-spin {
+  to { --hum-angle: 360deg; }
+}
+@keyframes hum-glow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 9%, transparent), 0 0 16px -6px color-mix(in srgb, var(--brand) 55%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hum { animation: none; background: var(--brand-border); }
+}
+
+/* progress rings on the home page draw in once */
+.ring-arc { transition: stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .ring-arc { transition: none; } }
+
+/* headphones prompt: fades and rises in, sinks out; waves breathe out of the ear cups */
+.hp-backdrop { animation: hp-fade 0.25s ease-out both; }
+.hp-panel { animation: hp-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hp-out { animation: hp-fade-out 0.22s ease-in both; }
+.hp-out .hp-panel { animation: hp-sink 0.22s ease-in both; }
+@keyframes hp-fade { from { opacity: 0; } }
+@keyframes hp-fade-out { to { opacity: 0; } }
+@keyframes hp-rise { from { opacity: 0; transform: translateY(14px) scale(0.96); } }
+@keyframes hp-sink { to { opacity: 0; transform: translateY(6px) scale(0.98); } }
+.hp-wave { opacity: 0; animation: hp-wave 1.9s ease-out infinite; }
+.hp-wave.d2 { animation-delay: 0.45s; }
+.hp-left { --dx: -5px; }
+.hp-right { --dx: 5px; }
+@keyframes hp-wave {
+  0% { opacity: 0; transform: translateX(0); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(var(--dx)); }
+}
+.hp-bob { animation: hp-bob 3.2s ease-in-out infinite; }
+@keyframes hp-bob { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .hp-backdrop, .hp-panel, .hp-out, .hp-out .hp-panel, .hp-bob { animation: none; }
+  .hp-wave { animation: none; opacity: 0.7; }
+}
+
+/* sideways label rows in the timeline labeller: scroll by touch, wheel or the arrows, no scrollbar */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* chunky buttons and tiles: they sit on a darker edge (--edge) and press down onto it */
+.press {
+  box-shadow: 0 var(--lift, 4px) 0 var(--edge, var(--border));
+  transition: transform 0.06s ease, box-shadow 0.06s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.press:active:not(:disabled) {
+  transform: translateY(var(--lift, 4px));
+  box-shadow: 0 0 0 var(--edge, var(--border));
+}
+.press:disabled { box-shadow: 0 var(--lift, 4px) 0 var(--border); }
+
+/* a selected label tile pops once */
+@keyframes pop { 40% { transform: scale(1.06); } }
+.pop { animation: pop 0.22s ease-out; }
+
+/* sound waves pulse */
+@keyframes wave-out { 0% { opacity: 0; transform: scale(0.8); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.25); } }
+.wave-out { animation: wave-out 2.2s ease-out infinite; transform-origin: center; }
+
+/* "nice!" feedback after a label goes in */
+@keyframes cheer-in { from { opacity: 0; transform: translateY(12px); } }
+.cheer-in { animation: cheer-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pop, .critter-bob, .wave-out, .cheer-in { animation: none; }
+  .press:active:not(:disabled) { transform: none; }
+}
+
+/* stamps sit slightly crooked, like they were pressed by hand */
+.stamp { transform: rotate(-3deg); }
+
+/* the island panel and redacted bars */
+.redacted { background: var(--text); color: transparent; border-radius: 3px; user-select: none; }
+
+/* confetti-lite: a handful of squares fall once behind the "5 in a row" card. CSS only. */
+.confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.confetti i {
+  position: absolute; top: -12px; width: 8px; height: 8px; border-radius: 2px;
+  animation: confetti-fall 1.4s cubic-bezier(0.3, 0.6, 0.5, 1) forwards;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(var(--fall, 320px)) rotate(var(--spin, 360deg)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+}
+
+/* combo pips light up one by one */
+@keyframes pip-in { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.pip-on { animation: pip-in 0.25s ease-out; }
+@media (prefers-reduced-motion: reduce) { .pip-on { animation: none; } }

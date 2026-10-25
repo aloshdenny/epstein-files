@@ -24,7 +24,7 @@ begin
     where s.attempt = 1;
   create index on _first (item_id);
 
-  delete from private.labeller_quality;
+  delete from private.labeller_quality where true;
   insert into private.labeller_quality (user_id, track, answers, refs, matched, unmatched, ref_similarity, follow,
     follow_se, retests, retest_agreement, controls, control_score, median_answer_s, rush_rate, timing_cv,
     median_listen_ms, top_label, top_label_share, unsure_rate, skip_rate, flags, status, computed_at)
@@ -121,7 +121,7 @@ begin
   from joined;
 
   -- trust: careful labellers count fully in consensus, watched ones half
-  update private.people p set trust = case when exists (select 1 from private.labeller_quality q where q.user_id = p.user_id and q.status = 'watch') then 0.5 else 1 end;
+  update private.people p set trust = case when exists (select 1 from private.labeller_quality q where q.user_id = p.user_id and q.status = 'watch') then 0.5 else 1 end where true;
 end $$;
 
 select cron.schedule('refresh-quality', '7,22,37,52 * * * *', 'select private.refresh_quality()');
