@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <section className="grid items-center gap-8 md:grid-cols-[1.05fr_1fr]">
+      <section className="grid items-center gap-8 md:grid-cols-[1.45fr_1fr]">
         <div>
           <Stamp>declassified</Stamp>
           <h1 className="mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight text-ink sm:text-5xl">Labelling. Made fun.<br />With Epstein.</h1>
@@ -43,14 +43,14 @@ export default function Home() {
           <div className="mt-6 flex flex-wrap gap-3">
             {signedIn ? (
               <>
-                <ButtonLink to="/label" variant="primary" size="lg">Keep labelling</ButtonLink>
-                <ButtonLink to="/leaderboard?week=latest" size="lg">This week's Epstein winners!</ButtonLink>
+                <ButtonLink to="/label" variant="primary" size="md">Keep labelling</ButtonLink>
+                <ButtonLink to="/leaderboard?week=latest" size="md">This week's Epstein winners!</ButtonLink>
               </>
             ) : (
               <>
-                <ButtonLink to="/signup" variant="primary" size="lg">Join the waitlist</ButtonLink>
-                <ButtonLink to="/leaderboard?week=latest" size="lg">This week's Epstein winners!</ButtonLink>
-                <ButtonLink to="/login" size="lg">Log in</ButtonLink>
+                <ButtonLink to="/signup" variant="primary" size="md">Join the waitlist</ButtonLink>
+                <ButtonLink to="/leaderboard?week=latest" size="md">This week's Epstein winners!</ButtonLink>
+                <ButtonLink to="/login" size="md">Log in</ButtonLink>
               </>
             )}
           </div>
