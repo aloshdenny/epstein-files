@@ -57,13 +57,15 @@ for (const user of users) {
       const options = item.class_options
       const hash = createHash('sha256').update(item.media_path).digest().readUInt32BE(0)
       const truth = hash % options.length
-      const behaviour = user.index < 9 ? 'genuine' : user.index < 11 ? 'sloppy' : 'fake'
+      // ~70% genuine, ~20% sloppy, ~10% fake (random labels, no listening).
+      const behaviour = user.index < 11 ? 'genuine' : user.index < 14 ? 'sloppy' : 'fake'
+      const roll = createHash('sha256').update(`${user.email}:${item.media_path}`).digest().readUInt32BE(0)
       if (behaviour !== 'fake' && thinkMs > 0) await new Promise((resolve) => setTimeout(resolve, thinkMs))
       const pick = behaviour === 'genuine'
-        ? (label % 10 === 9 ? (truth + 1) % options.length : truth)
+        ? (roll % 12 === 0 ? (truth + 1) % options.length : truth)
         : behaviour === 'sloppy'
-          ? (label % 2 ? truth : (truth + 1) % options.length)
-          : 0
+          ? (roll % 2 ? truth : (truth + 1 + (roll >> 1) % (options.length - 1)) % options.length)
+          : roll % options.length
       const args = item.kind === 'audio'
         ? { p_labels: [options[pick]], p_listen_ms: behaviour === 'fake' ? 1500 : behaviour === 'sloppy' ? 2200 : 4000, p_intensity: item.audio_version === 'beta' ? 50 : null }
         : { p_labels: [options[pick]], p_shape: { type: 'rect', x: 0.25, y: 0.25, w: 0.5, h: 0.5 } }
