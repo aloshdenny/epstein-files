@@ -20,11 +20,22 @@ export type Challenge = {
   items_scored: number
   agreement: number | null
   ends_at: string | null
+  /** Set when the card points at another site instead of this app's labelling queue. */
+  external_url?: string
 }
 
 /** The owner of this deployment. Hosts are matched by email first, then username, then the admin flag. */
 export const OWNER_EMAIL = 'aloshdenny@gmail.com'
 export const CHALLENGES: Challenge[] = [
+  {
+    slug: 'asmrboard', name: 'ASMR Board',
+    blurb: 'The original. Blind-labelling six-second ASMR clips: twenty sounds, headphones on, one combo at a time.',
+    kinds: ['audio'], visibility: 'public', status: 'open',
+    host_username: 'alosh', host_email: OWNER_EMAIL,
+    labellers: 18, submissions: 3269, items: 554, items_scored: 554, agreement: null,
+    ends_at: null,
+    external_url: 'https://asmrboard.vercel.app',
+  },
   {
     slug: 'epstein-files', name: 'The Epstein Files',
     blurb: 'Sort the released files. Tag what you hear, circle what you see, climb the waitlist. Top ten make the island.',
@@ -74,8 +85,9 @@ export function isHost(c: Challenge, email: string | null | undefined, username:
   return isAdmin || (email != null && email.toLowerCase() === c.host_email.toLowerCase()) || username === c.host_username
 }
 
+// external cards point at another site; they are never "hosted here"
 export const hostedBy = (email: string | null | undefined, username: string | undefined, isAdmin = false) =>
-  allChallenges().filter((c) => isHost(c, email, username, isAdmin))
+  allChallenges().filter((c) => !c.external_url && isHost(c, email, username, isAdmin))
 
 export const publicChallenges = () => allChallenges().filter((c) => c.visibility === 'public')
 
