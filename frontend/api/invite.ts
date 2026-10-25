@@ -2,10 +2,13 @@ declare const process: { env: Record<string, string | undefined> }
 
 type Config = Record<string, string | undefined>
 
+export const config = { runtime: 'edge' }
+
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } })
 
-export default async function handler(req: Request, env: Config = process.env): Promise<Response> {
+export default async function handler(req: Request, local?: Config): Promise<Response> {
+  const env: Config = typeof local?.SUPABASE_URL === 'string' ? local : process.env
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
   const url = env.SUPABASE_URL
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY
