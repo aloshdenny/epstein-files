@@ -40,7 +40,11 @@ export default function Leaderboard() {
   const [weeks, setWeeks] = useState<string[]>([])
   const rows = useLeaderboard(week, 200)
   useEffect(() => {
-    supabase.rpc('leaderboard_weeks').then(({ data }) => setWeeks(((data as { week: string }[] | null) ?? []).map((r) => r.week)))
+    supabase.rpc('leaderboard_weeks').then(({ data }) => {
+      const list = ((data as { week: string }[] | null) ?? []).map((r) => r.week)
+      setWeeks(list)
+      if (new URLSearchParams(location.search).get('week') === 'latest' && list.length) setWeek(list[0])
+    })
   }, [])
 
   return (

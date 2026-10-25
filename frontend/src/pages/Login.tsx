@@ -30,7 +30,7 @@ export default function Login() {
       return setError(error.message === 'Invalid login credentials' ? 'Wrong email or password.' : friendlyError(error.message))
     }
     setBusy(false)
-    navigate('/dashboard')
+    navigate(new URLSearchParams(location.search).get('next') ?? '/dashboard')
   }
 
   return (

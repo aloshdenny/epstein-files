@@ -39,9 +39,9 @@ export const CHALLENGES: Challenge[] = [
   {
     slug: 'epstein-files', name: 'The Epstein Files',
     blurb: 'Sort the released files. Tag what you hear, circle what you see, climb the waitlist. Top ten make the island.',
-    kinds: ['audio', 'image'], visibility: 'public', status: 'open',
+    kinds: ['audio', 'image'], visibility: 'private', status: 'open',
     host_username: 'alosh', host_email: OWNER_EMAIL,
-    labellers: 17, submissions: 3269, items: 554, items_scored: 380, agreement: 0.71,
+    labellers: 17, submissions: 3269, items: 565, items_scored: 380, agreement: 0.71,
     ends_at: '2026-11-15',
   },
   {
@@ -70,8 +70,8 @@ export const CHALLENGES: Challenge[] = [
   },
   {
     slug: 'fossasia-votes', name: 'FOSSASIA Talk Votes',
-    blurb: 'Private: the review panel scores proposal clips ahead of the summit. Only the host and panel can see names.',
-    kinds: ['audio'], visibility: 'private', status: 'open',
+    blurb: 'The review panel scores proposal clips ahead of the summit. Open to FOSSASIA volunteers.',
+    kinds: ['audio'], visibility: 'public', status: 'open',
     host_username: 'alosh', host_email: OWNER_EMAIL,
     labellers: 6, submissions: 214, items: 60, items_scored: 41, agreement: 0.69,
     ends_at: '2026-11-08',
@@ -109,3 +109,22 @@ export function saveUserChallenge(c: Challenge) {
 }
 
 export const allChallenges = () => [...CHALLENGES, ...loadUserChallenges()]
+
+// ---- invites: one shareable code per challenge, kept with the host until the challenges table lands ----
+
+const INVITE_KEY = 'ef_invites'
+
+const newCode = () => {
+  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // no lookalikes
+  const group = () => Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
+  return `${group()}-${group()}`
+}
+
+export function inviteFor(slug: string): { code: string; link: string } {
+  const all = JSON.parse(localStorage.getItem(INVITE_KEY) ?? '{}') as Record<string, string>
+  if (!all[slug]) {
+    all[slug] = newCode()
+    localStorage.setItem(INVITE_KEY, JSON.stringify(all))
+  }
+  return { code: all[slug], link: `${window.location.origin}/join/${slug}?code=${all[slug]}` }
+}

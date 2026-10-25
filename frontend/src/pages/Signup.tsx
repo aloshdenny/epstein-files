@@ -30,7 +30,7 @@ export default function Signup() {
     if (!data.session) return setSent(true) // the project asks new accounts to confirm their email first
     // signing up with a kit labeller's email claims their profile (and labels) on the way in
     await refreshProfile()
-    navigate('/welcome')
+    navigate(new URLSearchParams(location.search).get('next') ?? '/welcome')
   }
 
   if (sent)

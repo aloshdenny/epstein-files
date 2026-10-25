@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import Avatar from '../components/Avatar'
 import { ChallengeCard } from '../components/ChallengeCard'
 import { AppLayout } from '../components/Layouts'
-import { ButtonLink, Card, CardHeader, Folder, Stamp } from '../components/ui'
+import { ButtonLink, Folder, Stamp } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { hostedBy, publicChallenges } from '../lib/challenges'
-import { useLeaderboard } from '../lib/stats'
 import { supabase } from '../lib/supabase'
-import { IslandPanel } from './Leaderboard'
 
 type Site = { submissions: number; labellers: number; items: number; items_scored: number }
 
@@ -28,7 +24,6 @@ function Hero() {
 
 export default function Home() {
   const { session, profile } = useAuth()
-  const rows = useLeaderboard(null, 10)
   const [site, setSite] = useState<Site | null>(null)
   useEffect(() => {
     supabase.rpc('site_stats').then(({ data }) => setSite((data as Site[] | null)?.[0] ?? null))
@@ -41,16 +36,20 @@ export default function Home() {
       <section className="grid items-center gap-8 md:grid-cols-[1.05fr_1fr]">
         <div>
           <Stamp>declassified</Stamp>
-          <h1 className="mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight text-ink sm:text-5xl">Help sort the files.<br />Get on the waitlist.</h1>
+          <h1 className="mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight text-ink sm:text-5xl">Labelling. Made fun.<br />With Epstein.</h1>
           <p className="mt-4 max-w-md text-base text-ink-secondary">
             A labelling game for audio and images. The more useful your labels, the higher you climb. The top ten are on the island.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             {signedIn ? (
-              <ButtonLink to="/label" variant="primary" size="lg">Keep labelling</ButtonLink>
+              <>
+                <ButtonLink to="/label" variant="primary" size="lg">Keep labelling</ButtonLink>
+                <ButtonLink to="/leaderboard?week=latest" size="lg">This week's Epstein winners!</ButtonLink>
+              </>
             ) : (
               <>
                 <ButtonLink to="/signup" variant="primary" size="lg">Join the waitlist</ButtonLink>
+                <ButtonLink to="/leaderboard?week=latest" size="lg">This week's Epstein winners!</ButtonLink>
                 <ButtonLink to="/login" size="lg">Log in</ButtonLink>
               </>
             )}
@@ -74,27 +73,6 @@ export default function Home() {
             <ChallengeCard key={c.slug} c={c} hosting={hosting.has(c.slug)} joined={signedIn} />
           ))}
         </div>
-      </section>
-
-      <section className="mt-10 grid gap-6 md:grid-cols-2">
-        {rows && rows.length > 0 ? <IslandPanel rows={rows} /> : (
-          <Card><CardHeader title="Currently on the island" /><p className="text-sm text-ink-muted">Nobody yet. Plenty of room.</p></Card>
-        )}
-        <Card>
-          <CardHeader title="The rules, briefly" />
-          <ul className="space-y-2 text-sm text-ink-secondary">
-            <li>Answer honestly. Random answers get noticed and stop counting.</li>
-            <li>Skipping is fine. It just resets your combo.</li>
-            <li>Not sure? Say so. "Can't tell" and "not present" are real answers.</li>
-            <li>Rank is about useful labels, not volume.</li>
-          </ul>
-          <Link to="/leaderboard" className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-brand hover:underline">
-            See the whole waitlist
-          </Link>
-          {rows?.[0] && (
-            <p className="mt-3 flex items-center gap-2 text-xs text-ink-muted"><Avatar name={rows[0].username} url={rows[0].avatar_url} size={20} /> @{rows[0].username} is first in line.</p>
-          )}
-        </Card>
       </section>
     </AppLayout>
   )

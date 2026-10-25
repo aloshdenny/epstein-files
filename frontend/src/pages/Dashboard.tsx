@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Activity, RankHistory, StatGrid } from '../components/FileStats'
 import { HostStats } from '../components/ChallengeCard'
+import InvitePanel from '../components/InvitePanel'
 import { AppLayout } from '../components/Layouts'
-import { ButtonLink, Card, Loading, PageHeader, Stamp } from '../components/ui'
+import { ButtonLink, Button, Card, Loading, PageHeader, Stamp } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { hostedBy } from '../lib/challenges'
 import { useProgress } from '../lib/progress'
@@ -10,6 +12,7 @@ import { useUserStats } from '../lib/stats'
 /** The host's own corner: every challenge this account hosts, with its stats. Comes first on the dashboard. */
 function HostedChallenges() {
   const { session, profile } = useAuth()
+  const [inviting, setInviting] = useState<string | null>(null)
   const mine = hostedBy(session?.user?.email, profile?.username, profile?.is_admin)
   if (mine.length === 0) return null
   return (
@@ -30,12 +33,16 @@ function HostedChallenges() {
                 </div>
                 <p className="mt-1 text-sm text-ink-secondary">{c.blurb}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <ButtonLink to={`/genuinity?c=${c.slug}`} size="sm" variant="primary">Genuinity report</ButtonLink>
+                <Button size="sm" onClick={() => setInviting(inviting === c.slug ? null : c.slug)} aria-expanded={inviting === c.slug}>
+                  Invite people
+                </Button>
                 {profile?.is_admin && c.slug === 'epstein-files' && <ButtonLink to="/admin" size="sm">Admin</ButtonLink>}
               </div>
             </div>
             <div className="mt-4"><HostStats c={c} /></div>
+            {inviting === c.slug && <InvitePanel slug={c.slug} name={c.name} />}
             {c.ends_at && <p className="mt-3 font-mono text-xs text-ink-muted">closes {new Date(c.ends_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</p>}
           </Card>
         ))}
