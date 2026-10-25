@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(23);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d1', 'challenge-admin@example.test'),
@@ -29,6 +29,13 @@ select pg_temp.act('00000000-0000-0000-0000-0000000000d1');
 set local role authenticated;
 select is(public.create_challenge('invite-test', 'Invite test', 'audio', 'A private test.',
   array['cat', 'dog'], false), 'invite-test', 'a labeller can create and own a challenge');
+select is(public.challenge_add_items('invite-test',
+  '[{"kind":"audio","media_path":"hosted/00000000-0000-0000-0000-0000000000d1/challenge-upload.wav","class_options":["cat","dog"]}]'::jsonb),
+  1, 'challenge admins can register uploads from their own hosted folder');
+select throws_ok($$select public.challenge_add_items('invite-test',
+  '[{"kind":"audio","media_path":"challenge-upload.wav","class_options":["cat","dog"]}]'::jsonb)$$,
+  '42501', 'challenge admins may only add items under their own hosted folder',
+  'ordinary challenge admins cannot register uploads outside their hosted folder');
 reset role;
 select pg_temp.act('00000000-0000-0000-0000-0000000000d2');
 set local role authenticated;
@@ -54,6 +61,8 @@ values ('gen-test', 'Genuineness test', 'audio', '', array['cat', 'dog', 'bird',
         '00000000-0000-0000-0000-0000000000d1');
 insert into public.challenge_members (challenge, user_id, role, via)
 values ('gen-test', '00000000-0000-0000-0000-0000000000d1', 'admin', 'owner');
+insert into public.challenge_members (challenge, user_id, role, via)
+values ('gen-test', '00000000-0000-0000-0000-0000000000d3', 'labeller', 'open');
 insert into public.items (kind, media_path, class_options, challenge, target_votes)
 select 'audio', 'genuine-test-' || n || '.wav', array['cat', 'dog', 'bird', 'noise'], 'gen-test', 4
 from generate_series(1, 10) n;
@@ -116,6 +125,8 @@ select ok((select genuineness from public.challenge_genuineness('gen-test') wher
   'the fake labeller ranks below a genuine labeller');
 select is((select display_name from public.challenge_genuineness('gen-test') where username = 'genuine_one'),
   null::text, 'public challenge analytics hide display names');
+select is((select display_name from public.challenge_members_list('gen-test') where username = 'genuine_one'),
+  null::text, 'public challenge member lists hide display names');
 reset role;
 
 select * from finish();

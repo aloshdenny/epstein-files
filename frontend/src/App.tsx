@@ -52,8 +52,10 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<RequireUser><Dashboard /></RequireUser>} />
             <Route path="/label" element={<RequireUser><Label /></RequireUser>} />
+            <Route path="/host" element={<Navigate to="/challenges/new" replace />} />
             <Route path="/settings" element={<RequireUser><Settings /></RequireUser>} />
             <Route path="/admin" element={<RequireUser admin><Admin /></RequireUser>} />
+            <Route path="/genuinity" element={<Navigate to="/challenges/mine" replace />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/u/:username" element={<Profile />} />
             <Route path="/profile" element={<RequireUser><MyProfile /></RequireUser>} />

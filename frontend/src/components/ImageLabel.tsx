@@ -45,7 +45,7 @@ export default function ImageLabel({
   onSubmit: (a: ImageAnswer) => void
   onSkip: () => void
 }) {
-  const [tool, setTool] = useState<Tool>('lasso')
+  const [tool, setTool] = useState<Tool>('rect')
   const [shape, setShape] = useState<Shape | null>(null)
   const [history, setHistory] = useState<(Shape | null)[]>([])
   const [drawing, setDrawing] = useState<[number, number][] | null>(null)

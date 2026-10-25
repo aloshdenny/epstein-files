@@ -39,6 +39,7 @@ export default function Home() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ButtonLink to="/challenges" variant="primary" size="lg">Browse challenges</ButtonLink>
+            <ButtonLink to="/leaderboard?week=latest" size="lg">This week's winners</ButtonLink>
             <ButtonLink to={hostPath} state={hostPath === '/welcome' ? { from: { pathname: '/challenges/new' } } : undefined} size="lg">Host a challenge</ButtonLink>
           </div>
         </div>

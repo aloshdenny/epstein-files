@@ -220,12 +220,14 @@ function ChallengeUpload({ slug, kind, classOptions, onDone, onError }: {
     const files = [...(e.target.files ?? [])]
     e.target.value = ''
     if (!files.length) return
+    const { data: auth, error: authError } = await supabase.auth.getUser()
+    if (authError || !auth.user) return onError('Sign in before uploading challenge items.')
     setBusy(true)
     const items: Record<string, unknown>[] = []
     for (const [index, file] of files.entries()) {
       setProgress(`${index + 1} / ${files.length}`)
       const ext = file.name.split('.').pop()?.toLowerCase() || (kind === 'image' ? 'jpg' : 'mp3')
-      const path = `${crypto.randomUUID()}.${ext}`
+      const path = `hosted/${auth.user.id}/${crypto.randomUUID()}.${ext}`
       const bucket = kind === 'image' ? 'images' : 'clips'
       const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type })
       if (error) {

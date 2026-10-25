@@ -127,7 +127,7 @@ values
          'grunting', 'bed creaking'], true, 10),
   ('epstein-labelling', 'Epstein labelling', 'image',
    'Draw a box around Jeffrey Epstein. If he isn’t in the photo, say so.',
-   array['epstein'], false, 20),
+   array['jeffrey epstein', 'ghislaine maxwell', 'other person', 'document', 'none of these'], false, 20),
   ('bird-calls', 'Bird calls', 'audio', 'Identify the bird, or say there are no birds.',
    array['bird song', 'crow', 'pigeon', 'gull', 'owl', 'no birds'], true, 30),
   ('street-signs', 'Street signs', 'image', 'Find the street sign, or say the photo has none.',
@@ -135,6 +135,10 @@ values
 on conflict (slug) do update set
   title = excluded.title, kind = excluded.kind, blurb = excluded.blurb,
   class_options = excluded.class_options, open = excluded.open, sort = excluded.sort;
+
+update public.items
+set challenge = 'epstein-labelling'
+where batch = 'epstein' and challenge is null;
 
 insert into private.pending_owners (email, slug)
 values ('aloshdenny@gmail.com', 'asmrboard'), ('aloshdenny@gmail.com', 'epstein-labelling')
@@ -355,8 +359,9 @@ language plpgsql stable security definer set search_path = '' as $$
 begin
   if not private.challenge_admin(auth.uid(), p_slug) then raise exception 'challenge admins only' using errcode = '42501'; end if;
   return query
-    select m.user_id, p.username, p.display_name, m.role, m.via, m.joined_at
+    select m.user_id, p.username, case when c.open then null::text else p.display_name end, m.role, m.via, m.joined_at
     from public.challenge_members m join public.profiles p on p.id = m.user_id
+    join public.challenges c on c.slug = m.challenge
     where m.challenge = p_slug order by (m.role = 'admin') desc, m.joined_at;
 end $$;
 
@@ -368,16 +373,24 @@ declare
   e jsonb;
   new_id uuid;
   c public.challenges;
+  upload_folder text;
 begin
   if coalesce(auth.role(), 'service_role') <> 'service_role'
      and not private.challenge_admin(auth.uid(), p_slug) then
     raise exception 'challenge admins only' using errcode = '42501';
+  end if;
+  if coalesce(auth.role(), 'service_role') <> 'service_role'
+     and not exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin) then
+    upload_folder := 'hosted/' || auth.uid() || '/';
   end if;
   select * into c from public.challenges x where x.slug = p_slug and x.active;
   if not found then raise exception 'challenge inactive' using errcode = 'P0002'; end if;
   if jsonb_typeof(p_items) <> 'array' then raise exception 'items must be an array' using errcode = '22023'; end if;
   for e in select * from jsonb_array_elements(p_items) loop
     if coalesce(e ->> 'kind', c.kind) <> c.kind then raise exception 'item kind does not match challenge' using errcode = '22023'; end if;
+    if upload_folder is not null and coalesce(e ->> 'media_path', '') not like upload_folder || '%' then
+      raise exception 'challenge admins may only add items under their own hosted folder' using errcode = '42501';
+    end if;
     insert into public.items (kind, media_path, batch, class_options, duration_s, width, height, target_votes, challenge)
     values (c.kind, e ->> 'media_path', coalesce(e ->> 'batch', 'challenge:' || p_slug),
             case when e ? 'class_options' then array(select jsonb_array_elements_text(e -> 'class_options')) else c.class_options end,

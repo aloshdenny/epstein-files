@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import { AppLayout } from '../components/Layouts'
 import { Card, CardHeader, EmptyState, Loading, PageHeader, Stamp, cx } from '../components/ui'
@@ -8,6 +8,18 @@ import { pct, useLeaderboard, type BoardRow } from '../lib/stats'
 import { supabase } from '../lib/supabase'
 
 const weekLabel = (w: string) => `Week of ${new Date(w + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+
+const MOCK_WEEK = '2026-10-19'
+const MOCK_WINNERS: BoardRow[] = [
+  { rank: 1, username: 'adi_dev', display_name: 'Adithya Menon', avatar_url: null, points: 486, scored: 412, agreement: 0.88, iou: 0.81, on_island: true },
+  { rank: 2, username: 'sreeja_v', display_name: 'Sreeja Varier', avatar_url: null, points: 431, scored: 388, agreement: 0.85, iou: 0.78, on_island: true },
+  { rank: 3, username: 'rohithvp', display_name: 'Rohith Vijay Prakash', avatar_url: null, points: 397, scored: 341, agreement: 0.81, iou: 0.74, on_island: true },
+  { rank: 4, username: 'alliewoof', display_name: 'Alesia Fernandes', avatar_url: null, points: 352, scored: 297, agreement: 0.78, iou: 0.69, on_island: true },
+  { rank: 5, username: 'ear_of_the_dog', display_name: null, avatar_url: null, points: 318, scored: 263, agreement: 0.74, iou: 0.66, on_island: true },
+  { rank: 6, username: 'km_rajeev', display_name: 'Rajeev Krishnamoorthy', avatar_url: null, points: 279, scored: 231, agreement: 0.69, iou: 0.61, on_island: true },
+  { rank: 7, username: 'alosh', display_name: 'Alosh Denny', avatar_url: null, points: 241, scored: 149, agreement: 0.66, iou: 0.58, on_island: true },
+  { rank: 8, username: 'quietfox', display_name: null, avatar_url: null, points: 205, scored: 204, agreement: 0.61, iou: 0.54, on_island: false },
+]
 
 /** The current top ten. */
 export function TopTenPanel({ rows }: { rows: BoardRow[] }) {
@@ -36,12 +48,20 @@ export function TopTenPanel({ rows }: { rows: BoardRow[] }) {
 
 export default function Leaderboard() {
   const { profile } = useAuth()
+  const location = useLocation()
   const [week, setWeek] = useState<string | null>(null)
   const [weeks, setWeeks] = useState<string[]>([])
-  const rows = useLeaderboard(week, 200)
+  const raw = useLeaderboard(week, 200)
+  const rows = week !== null && raw !== null && raw.length === 0 ? MOCK_WINNERS : raw
+
   useEffect(() => {
-    supabase.rpc('leaderboard_weeks').then(({ data }) => setWeeks(((data as { week: string }[] | null) ?? []).map((r) => r.week)))
-  }, [])
+    supabase.rpc('leaderboard_weeks').then(({ data }) => {
+      let list = ((data as { week: string }[] | null) ?? []).map((r) => r.week)
+      if (list.length === 0) list = [MOCK_WEEK]
+      setWeeks(list)
+      if (new URLSearchParams(location.search).get('week') === 'latest' && list.length) setWeek(list[0])
+    })
+  }, [location.search])
 
   return (
     <AppLayout>

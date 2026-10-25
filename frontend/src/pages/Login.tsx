@@ -55,7 +55,7 @@ export default function Login() {
         {unclaimed && (
           <Alert tone="brand">
             There's no account for this email yet.{' '}
-            <Link to={`/signup?email=${encodeURIComponent(email.trim())}`} className="font-medium text-brand hover:underline">Sign up with it</Link> to open your file.
+            <Link to={`/signup?email=${encodeURIComponent(email.trim())}`} state={location.state} className="font-medium text-brand hover:underline">Sign up with it</Link> to open your file.
           </Alert>
         )}
         {error && <Alert>{error}</Alert>}
