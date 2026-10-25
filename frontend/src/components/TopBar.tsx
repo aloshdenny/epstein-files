@@ -100,7 +100,7 @@ export default function TopBar() {
         <Brand />
         <Link to="/challenges" className="ml-1 rounded-xl px-2.5 py-1.5 text-sm font-bold text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink">Challenges</Link>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          {profile?.onboarded && <DailyBar />}
+          {profile?.onboarded && <div className="hidden sm:block"><DailyBar /></div>}
           <ThemeToggle />
           {loading ? null : session && profile ? (
             <AccountMenu />
