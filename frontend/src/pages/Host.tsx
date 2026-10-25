@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppLayout } from '../components/Layouts'
-import { Button, Card, CardHeader, Field, Input, PageHeader, Stamp, cx } from '../components/ui'
+import { Button, Card, CardHeader, Field, Input, PageHeader, Spinner, Stamp, cx } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { saveUserChallenge, type Challenge } from '../lib/challenges'
+import { supabase } from '../lib/supabase'
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32) || 'challenge'
@@ -12,8 +13,25 @@ const TEXTAREA =
   'w-full rounded-2xl border-2 border-hairline bg-surface-muted px-4 py-3 text-[15px] font-semibold text-ink ' +
   'placeholder:font-medium placeholder:text-ink-muted transition-colors focus:border-brand-border focus:bg-surface focus:outline-none'
 
-/** Three steps: what it is, who can join, launch. */
-const STEP_LABELS = ['The challenge', 'Who can join', 'Launch']
+/** Image dimensions or audio duration, measured in the browser. */
+const measure = (file: File): Promise<Record<string, number>> =>
+  new Promise((ok) => {
+    const url = URL.createObjectURL(file)
+    if (file.type.startsWith('image/')) {
+      const img = new Image()
+      img.onload = () => { ok({ width: img.naturalWidth, height: img.naturalHeight }); URL.revokeObjectURL(url) }
+      img.onerror = () => ok({})
+      img.src = url
+    } else {
+      const a = new Audio()
+      a.onloadedmetadata = () => { ok({ duration_s: a.duration }); URL.revokeObjectURL(url) }
+      a.onerror = () => ok({})
+      a.src = url
+    }
+  })
+
+/** Four steps: what it is, who can join, the items, launch. */
+const STEP_LABELS = ['The challenge', 'Who can join', 'Items', 'Launch']
 
 export default function Host() {
   const { session, profile } = useAuth()
@@ -24,10 +42,46 @@ export default function Host() {
   const [kinds, setKinds] = useState<('audio' | 'image')[]>([])
   const [visibility, setVisibility] = useState<'public' | 'private'>('public')
   const [ends, setEnds] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [classes, setClasses] = useState('')
+  const [error, setError] = useState('')
+  const [progress, setProgress] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const stepOk = [name.trim().length >= 3 && blurb.trim().length >= 10 && kinds.length > 0, true, true][step]
+  const classList = classes.split(',').map((c) => c.trim().toLowerCase()).filter(Boolean)
+  const stepOk = [
+    name.trim().length >= 3 && blurb.trim().length >= 10 && kinds.length > 0,
+    true,
+    files.length === 0 || classList.length > 0,
+    true,
+  ][step]
 
-  const launch = () => {
+  const pick = (e: ChangeEvent<HTMLInputElement>) => {
+    setFiles([...(e.target.files ?? [])].filter((f) => f.type.startsWith('audio/') || f.type.startsWith('image/')))
+    e.target.value = ''
+  }
+
+  const launch = async () => {
+    setError('')
+    let added = 0
+    if (files.length && profile?.id) {
+      setBusy(true)
+      const items: Record<string, unknown>[] = []
+      for (const [i, f] of files.entries()) {
+        setProgress(`uploading ${i + 1} / ${files.length}`)
+        const image = f.type.startsWith('image/')
+        const ext = f.name.split('.').pop()?.toLowerCase() ?? (image ? 'jpg' : 'mp3')
+        const path = `hosted/${profile.id}/${crypto.randomUUID()}.${ext}`
+        const { error: up } = await supabase.storage.from(image ? 'images' : 'clips').upload(path, f, { contentType: f.type })
+        if (up) { setBusy(false); setProgress(''); setError(`${f.name}: ${up.message}`); return }
+        items.push({ kind: image ? 'image' : 'audio', media_path: path, class_options: classList, source_uid: `${slugify(name)}:${f.name}`, ...(await measure(f)) })
+      }
+      const { data, error: rpc } = await supabase.rpc('host_add_items', { p_batch: slugify(name), p_items: items })
+      setBusy(false)
+      setProgress('')
+      if (rpc) { setError(rpc.message); return }
+      added = (data as number) ?? 0
+    }
     const c: Challenge = {
       slug: `${slugify(name)}-${Math.random().toString(36).slice(2, 6)}`,
       name: name.trim(),
@@ -37,7 +91,7 @@ export default function Host() {
       status: 'open',
       host_username: profile?.username ?? 'you',
       host_email: session?.user?.email ?? '',
-      labellers: 0, submissions: 0, items: 0, items_scored: 0, agreement: null,
+      labellers: 0, submissions: 0, items: added, items_scored: 0, agreement: null,
       ends_at: ends || null,
     }
     saveUserChallenge(c)
@@ -109,16 +163,41 @@ export default function Host() {
 
       {step === 2 && (
         <Card>
+          <CardHeader title="Your items" description="What labellers will actually label. You can skip this and add items later from the admin panel." />
+          <div className="mt-4 space-y-4">
+            <Field label="Classes" hint="What labellers pick for each item, comma separated" htmlFor="hc-classes">
+              <Input id="hc-classes" value={classes} onChange={(e) => setClasses(e.target.value)}
+                placeholder="jeffrey epstein, ghislaine maxwell, other person" />
+            </Field>
+            <Field label="Files" hint="Audio clips or images. Image labelling uses bounding boxes scored by IoU overlap.">
+              <label className={cx('press flex h-11 cursor-pointer items-center justify-center rounded-2xl bg-brand px-5 text-[13px] font-extrabold uppercase tracking-[0.06em] text-white [--edge:var(--brand-dark)]')}>
+                Choose files
+                <input type="file" multiple accept="audio/*,image/*" onChange={pick} hidden />
+              </label>
+            </Field>
+            {files.length > 0 && (
+              <ul className="space-y-1 font-mono text-xs text-ink-secondary">
+                {files.map((f) => <li key={f.name + f.size} className="truncate">{f.name} · {(f.size / 1024).toFixed(0)} KB</li>)}
+              </ul>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card>
           <CardHeader title="Ready to launch?" description="Last look before it goes up." />
           <dl className="mt-4 space-y-2.5 text-sm">
-            {([['Name', name], ['Pitch', blurb], ['Media', kinds.join(' + ')], ['Visibility', visibility], ['Closes', ends || 'no end date']] as const).map(([k, v]) => (
+            {([['Name', name], ['Pitch', blurb], ['Media', kinds.join(' + ')], ['Visibility', visibility],
+               ['Items', files.length ? `${files.length} files, classes: ${classList.join(', ')}` : 'none yet, add later'],
+               ['Closes', ends || 'no end date']] as const).map(([k, v]) => (
               <div key={k} className="grid grid-cols-[7rem_1fr] gap-2">
                 <dt className="font-bold text-ink-muted">{k}</dt>
                 <dd className="font-semibold text-ink">{v}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-4 text-sm text-ink-secondary">Upload items from the admin panel once it's live. Labellers get ranked on your genuinity panel as their scored labels come in.</p>
+          <p className="mt-4 text-sm text-ink-secondary">Your items join the labelling queue under your own batch. Labellers get ranked on your genuinity panel as their scored labels come in.</p>
         </Card>
       )}
 
@@ -126,12 +205,15 @@ export default function Host() {
         <Button variant="ghost" onClick={() => (step === 0 ? navigate('/dashboard') : setStep(step - 1))}>
           {step === 0 ? 'Cancel' : 'Back'}
         </Button>
-        {step < 2 ? (
+        {step < 3 ? (
           <Button variant="primary" disabled={!stepOk} onClick={() => setStep(step + 1)}>Continue</Button>
         ) : (
-          <Button variant="primary" onClick={launch}>Launch challenge</Button>
+          <Button variant="primary" disabled={busy} onClick={launch}>
+            {busy ? <><Spinner className="mr-2 h-3.5 w-3.5" />{progress || 'Uploading'}</> : 'Launch challenge'}
+          </Button>
         )}
       </div>
+      {error && <p className="mt-3 text-sm font-bold text-danger">{error}</p>}
     </AppLayout>
   )
 }
