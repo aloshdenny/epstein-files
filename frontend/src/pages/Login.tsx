@@ -1,19 +1,21 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/Layouts'
 import { Alert, Button, Field, Input, PasswordInput, ButtonLink } from '../components/ui'
 import { useAuth } from '../lib/auth'
+import { pendingInvitePath } from '../lib/challenges'
 import { friendlyError, supabase } from '../lib/supabase'
 
 export default function Login() {
   const { session, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [unclaimed, setUnclaimed] = useState(false)
   const [busy, setBusy] = useState(false)
-  if (!loading && session && !session.user.is_anonymous) return <Navigate to="/dashboard" replace />
+  if (!loading && session && !session.user.is_anonymous) return <Navigate to={pendingInvitePath() ?? '/dashboard'} replace />
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -30,11 +32,12 @@ export default function Login() {
       return setError(error.message === 'Invalid login credentials' ? 'Wrong email or password.' : friendlyError(error.message))
     }
     setBusy(false)
-    navigate('/dashboard')
+    const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from
+    navigate(pendingInvitePath() ?? `${from?.pathname ?? '/dashboard'}${from?.search ?? ''}`, { replace: true })
   }
 
   return (
-    <AuthLayout action={<ButtonLink to="/signup" variant="secondary" size="sm">Sign up</ButtonLink>}>
+    <AuthLayout action={<ButtonLink to="/signup" state={location.state} variant="secondary" size="sm">Sign up</ButtonLink>}>
       <form onSubmit={submit} className="space-y-5">
         <div className="space-y-1.5 text-center">
           <h1 className="text-center text-[26px] font-black tracking-tight text-ink">Log in</h1>
@@ -58,7 +61,7 @@ export default function Login() {
         {error && <Alert>{error}</Alert>}
         <Button type="submit" variant="primary" disabled={busy} className="w-full">{busy ? 'Logging in…' : 'Log in'}</Button>
         <p className="text-center text-sm text-ink-muted">
-          New here? <Link to="/signup" className="font-medium text-brand hover:underline">Create an account</Link>
+          New here? <Link to="/signup" state={location.state} className="font-medium text-brand hover:underline">Create an account</Link>
         </p>
       </form>
     </AuthLayout>

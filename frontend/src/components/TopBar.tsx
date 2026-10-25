@@ -13,11 +13,11 @@ export function Brand({ className, large = false }: { className?: string; large?
     <Link
       to="/"
       onClick={(e) => pathname === '/' && e.preventDefault()}
-      aria-label="epstein files"
+      aria-label="dabel"
       className={cx('inline-flex items-center gap-2 font-mono font-bold tracking-tight text-ink', large ? 'text-2xl' : 'text-lg', className)}
     >
       <Folder size={large ? 40 : 28} stamped />
-      <span className={cx(large ? '' : 'max-sm:hidden')}>epstein files</span>
+      <span className={cx(large ? '' : 'max-sm:hidden')}>dabel</span>
     </Link>
   )
 }
@@ -76,6 +76,8 @@ function AccountMenu() {
         <div role="menu" className="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border-2 border-hairline bg-surface-raised p-1.5">
           <div className="px-3 pb-1.5 pt-1 text-xs font-semibold text-ink-muted">Signed in as <span className="font-medium text-ink">@{profile.username}</span></div>
           <Link role="menuitem" to="/dashboard" className={item}><Icon><path d="M3 13h4v7H3zM10 8h4v12h-4zM17 4h4v16h-4z" /></Icon>Dashboard</Link>
+          <Link role="menuitem" to="/challenges/mine" className={item}><Icon><path d="M4 5h16M4 12h16M4 19h16" /><circle cx="8" cy="5" r="2" /><circle cx="16" cy="12" r="2" /></Icon>My challenges</Link>
+          <Link role="menuitem" to="/leaderboard" className={item}><Icon><path d="M8 21h8M12 17v4M5 3h14v10a7 7 0 0 1-14 0z" /><path d="M5 6H3v3a4 4 0 0 0 4 4M19 6h2v3a4 4 0 0 1-4 4" /></Icon>Leaderboard</Link>
           <Link role="menuitem" to="/label" className={item}><Icon><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></Icon>Label</Link>
           <Link role="menuitem" to={`/u/${profile.username}`} className={item}><Icon><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>Your file</Link>
           <Link role="menuitem" to="/settings" className={item}><Icon><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></Icon>Settings</Link>
@@ -96,7 +98,7 @@ export default function TopBar() {
     <header className="sticky top-0 z-10 border-b-2 border-hairline bg-surface">
       <div className="mx-auto flex h-[var(--topbar-height)] max-w-5xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Brand />
-        <Link to="/leaderboard" className="ml-1 rounded-xl px-2.5 py-1.5 text-sm font-bold text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink">Waitlist</Link>
+        <Link to="/challenges" className="ml-1 rounded-xl px-2.5 py-1.5 text-sm font-bold text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink">Challenges</Link>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           {profile?.onboarded && <DailyBar />}
           <ThemeToggle />

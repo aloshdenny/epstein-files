@@ -47,7 +47,7 @@ export default function Celebration({ milestone, onContinue }: { milestone: Mile
         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-ink">{combo ? `${milestone.combo === 5 ? '5' : milestone.combo} in a row!!` : 'Labelling complete!'}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-ink-muted">
           {combo
-            ? 'No skips, no wandering off. The waitlist notices this sort of thing.'
+            ? 'No skips, no wandering off. The public board notices this sort of thing.'
             : `That's ${milestone.today} today. You can stop here, or keep going. Everything still counts.`}
         </p>
         <Button variant="primary" size="lg" className="mt-6" onClick={onContinue} autoFocus>

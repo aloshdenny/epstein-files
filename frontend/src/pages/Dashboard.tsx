@@ -21,7 +21,7 @@ export default function Dashboard() {
       {stats === undefined ? <Loading /> : stats === null ? null : (
         <div className="space-y-6">
           {stats.rank != null && stats.rank <= 10 && (
-            <Card className="flex items-center gap-3"><Stamp tone="ok">on the island</Stamp><span className="text-sm font-bold text-ink">You're in the top ten. Try to stay there.</span></Card>
+            <Card className="flex items-center gap-3"><Stamp tone="ok">top ten</Stamp><span className="text-sm font-bold text-ink">You're in the top ten. Try to stay there.</span></Card>
           )}
           <StatGrid stats={stats} counts={counts} />
           <RankHistory history={history} />

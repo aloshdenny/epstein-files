@@ -9,14 +9,14 @@ import { supabase } from '../lib/supabase'
 
 const weekLabel = (w: string) => `Week of ${new Date(w + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
 
-/** The live "currently on the island" panel: the top ten right now. */
-export function IslandPanel({ rows }: { rows: BoardRow[] }) {
+/** The current top ten. */
+export function TopTenPanel({ rows }: { rows: BoardRow[] }) {
   const top = rows.filter((r) => r.on_island).slice(0, 10)
   return (
     <Card>
-      <CardHeader title="Currently on the island" description="The top ten. Membership is reviewed every five minutes." action={<Stamp tone="ok">live</Stamp>} />
+      <CardHeader title="The top ten" description="Ranks update every five minutes." action={<Stamp tone="ok">live</Stamp>} />
       {top.length === 0 ? (
-        <p className="text-sm text-ink-muted">The island is empty. Suspiciously so.</p>
+        <p className="text-sm text-ink-muted">Nobody is there yet. Suspiciously quiet.</p>
       ) : (
         <ol className="grid gap-2 sm:grid-cols-2">
           {top.map((r) => (
@@ -46,7 +46,7 @@ export default function Leaderboard() {
   return (
     <AppLayout>
       <PageHeader
-        title="The Epstein waitlist"
+        title="Public leaderboard"
         description="Ranked by useful labels: every answer scores how well it matches what everyone else saw."
         actions={
           <select value={week ?? ''} onChange={(e) => setWeek(e.target.value || null)} aria-label="Which week"
@@ -59,10 +59,10 @@ export default function Leaderboard() {
       {rows === null ? (
         <Loading />
       ) : rows.length === 0 ? (
-        <EmptyState title="Nobody is on the waitlist yet." description="Items get scored once enough people label them. Be early." />
+        <EmptyState title="Nobody has a rank yet." description="Items get scored once enough people label them. Be early." />
       ) : (
         <div className="space-y-6">
-          {week === null && <IslandPanel rows={rows} />}
+          {week === null && <TopTenPanel rows={rows} />}
           <Card padded={false} className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -84,7 +84,7 @@ export default function Leaderboard() {
                         <Link to={`/u/${r.username}`} className="flex items-center gap-2.5 hover:underline">
                           <Avatar name={r.username} url={r.avatar_url} size={28} />
                           <span className="truncate font-extrabold text-ink">{r.display_name ?? r.username}</span>
-                          {r.on_island && <Stamp tone="ok" className="max-sm:hidden">island</Stamp>}
+                          {r.on_island && <Stamp tone="ok" className="max-sm:hidden">top ten</Stamp>}
                           {me && <span className="text-xs font-bold text-brand">you</span>}
                         </Link>
                       </td>

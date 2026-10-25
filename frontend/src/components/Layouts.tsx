@@ -7,10 +7,10 @@ function Footer() {
   return (
     <footer className="border-t-2 border-hairline">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-6 text-xs font-bold text-ink-muted sm:px-6">
-        <span className="font-mono">epstein files</span>
-        <Link to="/leaderboard" className="transition-colors hover:text-ink">Waitlist</Link>
+        <span className="font-mono">dabel</span>
+        <Link to="/challenges" className="transition-colors hover:text-ink">Challenges</Link>
         <Link to="/label" className="transition-colors hover:text-ink">Label</Link>
-        <span className="ml-auto font-medium">A labelling game. Not affiliated with anyone, alive or otherwise.</span>
+        <span className="ml-auto font-medium">all-in-one labelling</span>
       </div>
     </footer>
   )

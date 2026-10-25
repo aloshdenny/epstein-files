@@ -7,7 +7,7 @@ export function StatGrid({ stats, counts }: { stats: UserStats; counts: Map<stri
   const s = streaks(counts)
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <Stat value={stats.rank ? `#${stats.rank.toLocaleString()}` : '–'} label={stats.rank ? `of ${stats.ranked.toLocaleString()} on the waitlist` : 'not ranked yet'} />
+      <Stat value={stats.rank ? `#${stats.rank.toLocaleString()}` : '–'} label={stats.rank ? `of ${stats.ranked.toLocaleString()} on the public board` : 'not ranked yet'} />
       <Stat value={stats.submissions.toLocaleString()} label="labels" />
       <Stat value={stats.scored.toLocaleString()} label="scored" />
       <Stat value={pct(stats.agreement)} label="audio agreement" />

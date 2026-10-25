@@ -2,7 +2,7 @@
 // network) apart from several people, without ever storing who anyone is. The proxy (api/sb.ts) computes them and
 // passes them to Supabase as x-ab-* headers; the database keeps only these values (private.user_marks).
 //
-//   x-ab-device  keyed hash of the random id this browser keeps in localStorage (epstein-files-device)
+//   x-ab-device  keyed hash of the random id this browser keeps in localStorage (dabel-device; old key migrates once)
 //   x-ab-ip      keyed hash of the client IP
 //   x-ab-net     keyed hash of its network (IPv4 /24, IPv6 /48): one household, office or mobile cell
 //   x-ab-ua      coarse browser and OS ("Chrome Android"), in clear: shared by millions, identifies no one

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppLayout } from './components/Layouts'
 import { Loading } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
@@ -10,6 +10,11 @@ import Home from './pages/Home'
 import Label from './pages/Label'
 import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
+import Challenges from './pages/Challenges'
+import ChallengeManage from './pages/ChallengeManage'
+import CreateChallenge from './pages/CreateChallenge'
+import JoinChallenge from './pages/JoinChallenge'
+import MyChallenges from './pages/MyChallenges'
 import { AuthConfirm, ForgotPassword, ResetPassword } from './pages/Password'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
@@ -19,9 +24,10 @@ import Welcome from './pages/Welcome'
 /** Signed in and onboarded, or sent to the step that's missing. `admin` also needs the admin flag. */
 function RequireUser({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
   const { session, profile, loading } = useAuth()
+  const location = useLocation()
   if (loading) return <AppLayout><Loading /></AppLayout>
-  if (!session) return <Navigate to="/login" replace />
-  if (!profile?.onboarded) return <Navigate to="/welcome" replace />
+  if (!session) return <Navigate to="/login" state={{ from: location }} replace />
+  if (!profile?.onboarded) return <Navigate to="/welcome" state={{ from: location }} replace />
   if (admin && !profile.is_admin) return <Navigate to="/dashboard" replace />
   return children
 }
@@ -33,6 +39,11 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/challenges" element={<Challenges />} />
+            <Route path="/challenges/new" element={<RequireUser><CreateChallenge /></RequireUser>} />
+            <Route path="/challenges/mine" element={<RequireUser><MyChallenges /></RequireUser>} />
+            <Route path="/c/:slug/manage" element={<RequireUser><ChallengeManage /></RequireUser>} />
+            <Route path="/join/:token" element={<JoinChallenge />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/welcome" element={<Welcome />} />

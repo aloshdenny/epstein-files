@@ -4,6 +4,7 @@ import type { EmailOtpType } from '@supabase/supabase-js'
 import { AuthLayout } from '../components/Layouts'
 import { Alert, Button, ButtonLink, Field, Input, Loading, PasswordInput } from '../components/ui'
 import { useAuth } from '../lib/auth'
+import { pendingInvitePath } from '../lib/challenges'
 import { friendlyError, supabase } from '../lib/supabase'
 
 /** Ask for a reset link (needs working email delivery on the project). */
@@ -54,7 +55,7 @@ export function AuthConfirm() {
     const type = (params.get('type') ?? 'email') as EmailOtpType
     supabase.auth.verifyOtp({ token_hash: params.get('token_hash') ?? '', type }).then(({ error }) => {
       if (error) setError(error.message)
-      else navigate(type === 'recovery' ? '/reset-password' : '/welcome', { replace: true })
+      else navigate(type === 'recovery' ? '/reset-password' : pendingInvitePath() ?? '/welcome', { replace: true })
     })
   }, [params, navigate])
   return (

@@ -8,10 +8,17 @@ export const API = `${window.location.origin}/sb`
  *  apart from several people; the /sb proxy scrambles it (with the network) before anything is stored. */
 function deviceId(): string | null {
   try {
-    let id = localStorage.getItem('epstein-files-device')
+    let id = localStorage.getItem('dabel-device')
+    if (!id) {
+      id = localStorage.getItem('epstein-files-device')
+      if (id) {
+        localStorage.setItem('dabel-device', id)
+        localStorage.removeItem('epstein-files-device')
+      }
+    }
     if (!id) {
       id = crypto.randomUUID()
-      localStorage.setItem('epstein-files-device', id)
+      localStorage.setItem('dabel-device', id)
     }
     return id
   } catch {

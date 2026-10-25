@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import Celebration, { type Milestone } from '../components/Celebration'
 import HeadphonesPrompt, { headphonesSeen } from '../components/HeadphonesPrompt'
 import ImageLabel, { type ImageAnswer } from '../components/ImageLabel'
 import { AppLayout } from '../components/Layouts'
 import { Button, Card, EmptyState, Kbd, Loading, Stamp, cx } from '../components/ui'
+import type { Challenge } from '../lib/challenges'
 import { useProgress } from '../lib/progress'
 import { KEYS, friendlyError, supabase, timeZone } from '../lib/supabase'
 
@@ -18,6 +20,8 @@ const MIN_LISTEN_MS = 1500
 
 /** One session, audio and images interleaved by the server. Blind: no counts, no other answers, no sources. */
 export default function Label() {
+  const [params] = useSearchParams()
+  const challengeSlug = params.get('c')
   const { progress, set, refresh } = useProgress()
   const [item, setItem] = useState<Item | null>(null)
   const [src, setSrc] = useState<string | null>(null)
@@ -28,6 +32,7 @@ export default function Label() {
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [rankNote, setRankNote] = useState<{ from: number | null; to: number } | null>(null)
   const [accuracy, setAccuracy] = useState<number | null>(null)
+  const [challengeTitle, setChallengeTitle] = useState('')
 
   const flash = useCallback((m: string) => {
     setToast(m)
@@ -37,7 +42,7 @@ export default function Label() {
   const next = useCallback(async () => {
     setPhase('loading')
     setSrc(null)
-    const { data, error } = await supabase.rpc('next_item')
+    const { data, error } = await supabase.rpc('next_item', challengeSlug ? { p_challenge: challengeSlug } : {})
     if (error) {
       setError(friendlyError(error.message))
       return setPhase('error')
@@ -55,11 +60,22 @@ export default function Label() {
     setItem(it)
     setSrc(signed.signedUrl)
     setPhase('ready')
-  }, [])
+  }, [challengeSlug])
 
   useEffect(() => {
     next()
   }, [next])
+
+  useEffect(() => {
+    if (!challengeSlug) {
+      setChallengeTitle('')
+      return
+    }
+    supabase.rpc('challenges').then(({ data }) => {
+      const challenge = (data as Challenge[] | null)?.find((row) => row.slug === challengeSlug)
+      setChallengeTitle(challenge?.title ?? challengeSlug)
+    })
+  }, [challengeSlug])
 
   const afterSubmit = useCallback(async (r: Submitted) => {
     const before = progress?.today ?? r.today - 1
@@ -114,11 +130,16 @@ export default function Label() {
 
   return (
     <AppLayout width="narrow">
+      {challengeSlug && <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-ink-muted"><span>Challenge · {challengeTitle || challengeSlug}</span><Link to="/challenges" className="text-brand hover:underline">All challenges</Link></div>}
       <ComboMeter combo={progress?.combo ?? 0} />
       {phase === 'loading' && <Loading />}
       {phase === 'error' && <EmptyState title="Something went wrong" description={error} action={<Button onClick={next}>Try again</Button>} />}
       {phase === 'empty' && (
-        <EmptyState title="Nothing left to label right now." description="Every file in the queue has enough eyes on it. New batches land regularly. Check back later." />
+        <EmptyState
+          title={challengeSlug ? 'Nothing left in this challenge right now.' : 'Nothing left to label right now.'}
+          description={challengeSlug ? 'Every item has enough eyes on it. The host may add more files later.' : 'Every file in the queue has enough eyes on it. New batches land regularly. Check back later.'}
+          action={challengeSlug ? <Link to="/challenges" className="rounded-xl bg-brand px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-white">Browse challenges</Link> : undefined}
+        />
       )}
       {phase === 'milestone' && milestones[0] && <Celebration key={JSON.stringify(milestones[0])} milestone={milestones[0]} onContinue={continueOn} />}
       {phase === 'ready' && item && src && (
@@ -144,9 +165,9 @@ export default function Label() {
       {rankNote && (
         <div role="status" className="cheer-in fixed bottom-6 left-1/2 z-30 w-[min(92vw,30rem)] -translate-x-1/2 rounded-2xl border-2 border-brand-border bg-brand-soft px-4 py-3 text-sm font-bold text-ink">
           {rankNote.from == null
-            ? <>You're on the Epstein waitlist: #{rankNote.to.toLocaleString()}.</>
-            : <>You moved up the Epstein waitlist. #{rankNote.from.toLocaleString()} → #{rankNote.to.toLocaleString()}.</>}
-          {rankNote.to <= 10 && <span className="ml-1 text-brand">Welcome to the island.</span>}
+            ? <>You're on the public board: #{rankNote.to.toLocaleString()}.</>
+            : <>You moved up the public board. #{rankNote.from.toLocaleString()} → #{rankNote.to.toLocaleString()}.</>}
+          {rankNote.to <= 10 && <span className="ml-1 text-brand">Front row. No catering.</span>}
         </div>
       )}
       {toast && <div role="status" className="fixed bottom-24 left-1/2 z-30 -translate-x-1/2 rounded-2xl bg-ink px-4 py-2.5 text-sm font-bold text-ink-inverse">{toast}</div>}
@@ -177,7 +198,7 @@ function AccuracyNote({ agreement, onClose }: { agreement: number; onClose: () =
       <Card className="hp-panel max-w-sm text-center">
         <Stamp tone="ok">noted for the record</Stamp>
         <h2 className="mt-4 text-xl font-extrabold text-ink">You're unusually accurate this week.</h2>
-        <p className="mt-2 text-sm text-ink-muted">{Math.round(agreement * 100)}% agreement, top 10% of labellers. Someone on the island might be nervous.</p>
+        <p className="mt-2 text-sm text-ink-muted">{Math.round(agreement * 100)}% agreement, top 10% of labellers. Someone else may be checking the numbers.</p>
         <Button variant="primary" className="mt-5" onClick={onClose} autoFocus>Carry on</Button>
       </Card>
     </div>

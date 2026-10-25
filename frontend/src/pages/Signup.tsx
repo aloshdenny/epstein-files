@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from '../components/Layouts'
 import { Alert, Button, Field, Input, PasswordInput, ButtonLink } from '../components/ui'
 import { useAuth } from '../lib/auth'
@@ -8,6 +8,7 @@ import { friendlyError, supabase } from '../lib/supabase'
 export default function Signup() {
   const { session, loading, refreshProfile } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const [email, setEmail] = useState(params.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -15,7 +16,7 @@ export default function Signup() {
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
   if (!loading && session?.user.is_anonymous) return <Navigate to="/save-progress" replace />
-  if (!loading && session) return <Navigate to="/welcome" replace />
+  if (!loading && session) return <Navigate to="/welcome" state={location.state} replace />
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -30,7 +31,7 @@ export default function Signup() {
     if (!data.session) return setSent(true) // the project asks new accounts to confirm their email first
     // signing up with a kit labeller's email claims their profile (and labels) on the way in
     await refreshProfile()
-    navigate('/welcome')
+    navigate('/welcome', { state: location.state })
   }
 
   if (sent)
@@ -44,7 +45,7 @@ export default function Signup() {
     )
 
   return (
-    <AuthLayout action={<ButtonLink to="/login" variant="secondary" size="sm">Log in</ButtonLink>}>
+    <AuthLayout action={<ButtonLink to="/login" state={location.state} variant="secondary" size="sm">Log in</ButtonLink>}>
       <form onSubmit={submit} className="space-y-5">
         <div className="space-y-1.5 text-center">
           <h1 className="text-center text-[26px] font-black tracking-tight text-ink">Create your account</h1>
@@ -60,7 +61,7 @@ export default function Signup() {
         <Button type="submit" variant="primary" disabled={busy} className="w-full">{busy ? 'Creating account…' : 'Create account'}</Button>
         <p className="text-xs text-ink-muted">To spot duplicate accounts, the site keeps scrambled codes for this browser and network. They can’t be turned back into your IP address and are deleted after 180 days without use.</p>
         <p className="text-center text-sm text-ink-muted">
-          Already have an account? <Link to="/login" className="font-medium text-brand hover:underline">Log in</Link>
+          Already have an account? <Link to="/login" state={location.state} className="font-medium text-brand hover:underline">Log in</Link>
         </p>
       </form>
     </AuthLayout>
