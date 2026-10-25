@@ -6,7 +6,13 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!url || !serviceKey) throw new Error('set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
 const authKey = process.env.SUPABASE_ANON_KEY ?? serviceKey
-const names = ['bart', 'lisa', 'milhouse', 'nelson', 'ralph', 'martin', 'sherri', 'terri', 'otto', 'apu', 'moe', 'barney']
+// Mock labellers copied over from ASMRboard (username, real name when given).
+const folks = [['adi_dev', 'Adithya Menon'], ['sreeja_v', 'Sreeja Varier'], ['rohithvp', 'Rohith Vijay Prakash'],
+  ['alliewoof', 'Alesia Fernandes'], ['ear_of_the_dog', null], ['km_rajeev', 'Rajeev Krishnamoorthy'], ['quietfox', null],
+  ['arhan', 'Arhan Qureshi'], ['nightowl_7', 'Sneha Thomas'], ['vak_learns', null], ['pencilcase', 'Ibrahim Kareem'],
+  ['bassdrop', null], ['guest_kid', null], ['dr_sonar', null], ['mythili', 'Mythili Nair'], ['swara', null]]
+const names = folks.map(([username]) => username)
+const realNames = new Map(folks)
 const challengeArg = process.argv.indexOf('--challenge')
 const requestedChallenge = challengeArg >= 0 ? process.argv[challengeArg + 1] : undefined
 const thinkMs = Math.max(0, Number(process.env.SEED_CHALLENGE_THINK_MS ?? 2050))
@@ -26,7 +32,7 @@ for (const [index, username] of names.entries()) {
     const updated = await admin.auth.admin.updateUserById(user.id, { password, email_confirm: true })
     if (updated.error) throw updated.error
   }
-  const profile = await admin.from('profiles').upsert({ id: user.id, username: `seed_${username}`, display_name: username[0].toUpperCase() + username.slice(1), onboarded: true })
+  const profile = await admin.from('profiles').upsert({ id: user.id, username, display_name: realNames.get(username), onboarded: true })
   if (profile.error) throw profile.error
   users.push({ id: user.id, email, password, index })
 }
@@ -62,7 +68,7 @@ for (const user of users) {
         ? { p_labels: [options[pick]], p_listen_ms: behaviour === 'fake' ? 1500 : behaviour === 'sloppy' ? 2200 : 4000, p_intensity: item.audio_version === 'beta' ? 50 : null }
         : { p_labels: [options[pick]], p_shape: { type: 'rect', x: 0.25, y: 0.25, w: 0.5, h: 0.5 } }
       const submitted = await client.rpc('submit_item', { p_item: item.item_id, ...args })
-      if (submitted.error) console.warn(`${username}/${challenge.slug}: ${submitted.error.message}`)
+      if (submitted.error) console.warn(`${user.email}/${challenge.slug}: ${submitted.error.message}`)
     }
   }
   console.log(`${user.email}: seeded`)
