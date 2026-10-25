@@ -70,7 +70,7 @@ export default function Home() {
           <span className="text-xs font-semibold text-ink-muted">Open to everyone</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {publicChallenges.map((c) => (
+          {publicChallenges().map((c) => (
             <ChallengeCard key={c.slug} c={c} hosting={hosting.has(c.slug)} joined={signedIn} />
           ))}
         </div>

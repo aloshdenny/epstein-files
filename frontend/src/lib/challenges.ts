@@ -24,7 +24,6 @@ export type Challenge = {
 
 /** The owner of this deployment. Hosts are matched by email first, then username, then the admin flag. */
 export const OWNER_EMAIL = 'aloshdenny@gmail.com'
-
 export const CHALLENGES: Challenge[] = [
   {
     slug: 'epstein-files', name: 'The Epstein Files',
@@ -68,7 +67,7 @@ export const CHALLENGES: Challenge[] = [
   },
 ]
 
-export const challengeBySlug = (slug: string | null) => CHALLENGES.find((c) => c.slug === slug)
+export const challengeBySlug = (slug: string | null) => allChallenges().find((c) => c.slug === slug)
 
 /** Does this signed-in account host this challenge? Email match, username match, or the admin flag. */
 export function isHost(c: Challenge, email: string | null | undefined, username: string | undefined, isAdmin = false) {
@@ -76,6 +75,25 @@ export function isHost(c: Challenge, email: string | null | undefined, username:
 }
 
 export const hostedBy = (email: string | null | undefined, username: string | undefined, isAdmin = false) =>
-  CHALLENGES.filter((c) => isHost(c, email, username, isAdmin))
+  allChallenges().filter((c) => isHost(c, email, username, isAdmin))
 
-export const publicChallenges = CHALLENGES.filter((c) => c.visibility === 'public')
+export const publicChallenges = () => allChallenges().filter((c) => c.visibility === 'public')
+
+// ---- user-hosted challenges (localStorage until the challenges table lands) ----
+
+const LS_KEY = 'ef_hosted_challenges'
+
+export function loadUserChallenges(): Challenge[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) ?? '[]')
+    return Array.isArray(raw) ? (raw as Challenge[]) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveUserChallenge(c: Challenge) {
+  localStorage.setItem(LS_KEY, JSON.stringify([...loadUserChallenges(), c]))
+}
+
+export const allChallenges = () => [...CHALLENGES, ...loadUserChallenges()]

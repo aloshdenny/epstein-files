@@ -55,7 +55,12 @@ export default function Dashboard() {
       <PageHeader
         title={`Hi, ${profile?.display_name ?? profile?.username}`}
         description={today >= goal ? `Daily goal done: ${today} labels today. Extra still counts.` : `${today} of ${goal} labels today.`}
-        actions={<ButtonLink to="/label" variant="primary" size="lg">{today > 0 ? 'Keep labelling' : 'Start labelling'}</ButtonLink>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink to="/host" variant="primary" size="lg">Host a challenge</ButtonLink>
+            <ButtonLink to="/label" size="lg">{today > 0 ? 'Keep labelling' : 'Start labelling'}</ButtonLink>
+          </div>
+        }
       />
       {stats === undefined ? <Loading /> : stats === null ? null : (
         <div className="space-y-6">

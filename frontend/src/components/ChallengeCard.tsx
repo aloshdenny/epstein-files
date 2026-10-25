@@ -8,7 +8,8 @@ const STATUS: Record<Challenge['status'], [string, 'ok' | 'brand' | 'danger']> =
 /** One hosted challenge as it appears in the public directory. */
 export function ChallengeCard({ c, hosting, joined }: { c: Challenge; hosting: boolean; joined: boolean }) {
   const [label, tone] = STATUS[c.status]
-  const joinable = c.status === 'open' && c.slug === 'epstein-files'
+  const joinable = c.status === 'open' && c.items > 0
+  const fresh = c.status === 'open' && c.items === 0 && hosting
   return (
     <Card className="flex flex-col">
       <div className="flex items-start justify-between gap-3">
@@ -29,10 +30,12 @@ export function ChallengeCard({ c, hosting, joined }: { c: Challenge; hosting: b
         {joinable ? (
           joined ? <ButtonLink to="/label" size="sm" variant="primary">Label now</ButtonLink>
                  : <ButtonLink to="/signup" size="sm" variant="primary">Join</ButtonLink>
+        ) : fresh ? (
+          <span className="text-xs font-extrabold text-brand">you host this · add items to open it to labellers</span>
         ) : (
           <span className="text-xs font-bold text-ink-muted">{c.status === 'finished' ? 'Closed to new labellers' : 'Not taking labellers yet'}</span>
         )}
-        {hosting && <span className="text-xs font-extrabold text-brand">you host this</span>}
+        {!fresh && hosting && <span className="text-xs font-extrabold text-brand">you host this</span>}
       </div>
     </Card>
   )

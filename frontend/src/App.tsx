@@ -8,6 +8,7 @@ import Admin from './pages/Admin'
 import Dashboard from './pages/Dashboard'
 import Genuinity from './pages/Genuinity'
 import Home from './pages/Home'
+import Host from './pages/Host'
 import Label from './pages/Label'
 import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<RequireUser><Dashboard /></RequireUser>} />
             <Route path="/label" element={<RequireUser><Label /></RequireUser>} />
+            <Route path="/host" element={<RequireUser><Host /></RequireUser>} />
             <Route path="/settings" element={<RequireUser><Settings /></RequireUser>} />
             <Route path="/admin" element={<RequireUser admin><Admin /></RequireUser>} />
             <Route path="/genuinity" element={<RequireUser><Genuinity /></RequireUser>} />

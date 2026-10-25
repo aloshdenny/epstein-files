@@ -53,6 +53,15 @@ export default function Genuinity() {
       </AppLayout>
     )
   if (!challenge) return null
+  if (challenge.labellers === 0)
+    return (
+      <AppLayout width="wide">
+        <PageHeader title="Genuinity" description={`${challenge.name}. Nobody has labelled yet.`} />
+        <EmptyState
+          title="No labellers yet"
+          description={`Once people join and each passes ${MIN_SCORED} scored labels, they are ranked here from most genuine to most fake. Upload items from the admin panel to open the queue.`} />
+      </AppLayout>
+    )
 
   // a private challenge is always seen with names by its host; a public one defaults to usernames, previewable
   const priv = challenge.visibility === 'private' || params.get('view') === 'private'
