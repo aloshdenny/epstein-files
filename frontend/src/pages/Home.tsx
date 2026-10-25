@@ -1,10 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar'
+import { ChallengeCard } from '../components/ChallengeCard'
 import { AppLayout } from '../components/Layouts'
-import { ButtonLink, Card, CardHeader, Folder, Stamp, cx } from '../components/ui'
+import { ButtonLink, Card, CardHeader, Folder, Stamp } from '../components/ui'
 import { useAuth } from '../lib/auth'
-import { useProgress } from '../lib/progress'
+import { hostedBy, publicChallenges } from '../lib/challenges'
 import { useLeaderboard } from '../lib/stats'
 import { supabase } from '../lib/supabase'
 import { IslandPanel } from './Leaderboard'
@@ -25,69 +26,15 @@ function Hero() {
   )
 }
 
-type Challenge = {
-  tag: string
-  title: string
-  text: string
-  goal: number
-  progress: number | null // null while signed out: the challenge shows, the progress waits
-  render: (n: number, goal: number) => ReactNode
-}
-
-function ComboDots({ n, goal }: { n: number; goal: number }) {
-  return (
-    <div className="mt-4 flex gap-1.5" aria-label={`${n} of ${goal} in a row`}>
-      {Array.from({ length: goal }, (_, i) => (
-        <span key={i} className={cx('h-3.5 w-3.5 rounded-full border-2', i < n ? 'border-[var(--brand)] bg-[var(--brand)]' : 'border-hairline-strong bg-transparent')} />
-      ))}
-    </div>
-  )
-}
-
-function ProgressBar({ n, goal }: { n: number; goal: number }) {
-  return (
-    <div className="mt-4">
-      <div className="mb-1.5 flex justify-between font-mono text-xs font-bold text-ink-muted tabular-nums">
-        <span>{n} / {goal}</span>
-        <span>{n >= goal ? 'done' : `${Math.max(0, goal - n)} to go`}</span>
-      </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-surface-muted">
-        <div className="h-full rounded-full bg-[var(--ok)] transition-[width] duration-500" style={{ width: `${Math.min(100, Math.round((n / goal) * 100))}%` }} />
-      </div>
-    </div>
-  )
-}
-
 export default function Home() {
   const { session, profile } = useAuth()
-  const { progress } = useProgress()
   const rows = useLeaderboard(null, 10)
   const [site, setSite] = useState<Site | null>(null)
   useEffect(() => {
     supabase.rpc('site_stats').then(({ data }) => setSite((data as Site[] | null)?.[0] ?? null))
   }, [])
   const signedIn = !!session && !!profile?.onboarded
-
-  const challenges: Challenge[] = [
-    {
-      tag: 'daily', title: 'Five in a row',
-      text: 'Land five labels in a row without a skip. The combo resets when you step away too long.',
-      goal: 5, progress: signedIn ? (progress?.combo ?? 0) : null,
-      render: (n, goal) => <ComboDots n={n} goal={goal} />,
-    },
-    {
-      tag: 'daily', title: 'The daily twenty',
-      text: 'Twenty labels closes the file for the day. Anything after still counts toward the waitlist.',
-      goal: progress?.daily_goal ?? 20, progress: signedIn ? (progress?.today ?? 0) : null,
-      render: (n, goal) => <ProgressBar n={n} goal={goal} />,
-    },
-    {
-      tag: 'weekly', title: 'Sharp ears',
-      text: 'Agree with the crowd on eight of your next ten scored items and you are on the accurate list this week.',
-      goal: 8, progress: signedIn ? 0 : null,
-      render: (n, goal) => <ProgressBar n={n} goal={goal} />,
-    },
-  ]
+  const hosting = new Set(hostedBy(session?.user?.email, profile?.username, profile?.is_admin).map((c) => c.slug))
 
   return (
     <AppLayout>
@@ -120,24 +67,11 @@ export default function Home() {
       <section className="mt-14">
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="text-2xl font-extrabold tracking-tight text-ink">Challenges</h2>
-          {signedIn ? (
-            <Link to="/label" className="text-sm font-extrabold text-brand hover:underline">Go</Link>
-          ) : (
-            <span className="text-xs font-semibold text-ink-muted">Join the waitlist to play</span>
-          )}
+          <span className="text-xs font-semibold text-ink-muted">Open to everyone</span>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {challenges.map((c) => (
-            <Card key={c.title}>
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">{c.tag}</span>
-              <h3 className="mt-1 text-lg font-extrabold text-ink">{c.title}</h3>
-              <p className="mt-1.5 text-sm text-ink-secondary">{c.text}</p>
-              {c.progress == null ? (
-                <p className="mt-4 font-mono text-xs font-bold text-ink-muted">progress starts when you do</p>
-              ) : (
-                c.render(c.progress, c.goal)
-              )}
-            </Card>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {publicChallenges.map((c) => (
+            <ChallengeCard key={c.slug} c={c} hosting={hosting.has(c.slug)} joined={signedIn} />
           ))}
         </div>
       </section>

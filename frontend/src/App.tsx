@@ -44,7 +44,7 @@ export default function App() {
             <Route path="/label" element={<RequireUser><Label /></RequireUser>} />
             <Route path="/settings" element={<RequireUser><Settings /></RequireUser>} />
             <Route path="/admin" element={<RequireUser admin><Admin /></RequireUser>} />
-            <Route path="/genuinity" element={<RequireUser admin><Genuinity /></RequireUser>} />
+            <Route path="/genuinity" element={<RequireUser><Genuinity /></RequireUser>} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/u/:username" element={<Profile />} />
             <Route path="/profile" element={<RequireUser><MyProfile /></RequireUser>} />

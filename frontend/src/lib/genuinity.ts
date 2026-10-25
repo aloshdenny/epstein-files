@@ -14,8 +14,7 @@ export type GenuineRow = {
   flags: string[]
 }
 
-export const GENUINITY: GenuineRow[] = [
-  { username: 'adi_dev', real_name: 'Adithya Menon', scored: 412, follow: 0.61, agreement: 0.88, status: 'ok', flags: [] },
+export const GENUINITY: GenuineRow[] = [  { username: 'adi_dev', real_name: 'Adithya Menon', scored: 412, follow: 0.61, agreement: 0.88, status: 'ok', flags: [] },
   { username: 'sreeja_v', real_name: 'Sreeja Varier', scored: 388, follow: 0.57, agreement: 0.85, status: 'ok', flags: [] },
   { username: 'rohithvp', real_name: 'Rohith Vijay Prakash', scored: 341, follow: 0.52, agreement: 0.81, status: 'ok', flags: [] },
   { username: 'alliewoof', real_name: 'Alesia Fernandes', scored: 297, follow: 0.49, agreement: 0.78, status: 'ok', flags: [] },
@@ -33,3 +32,24 @@ export const GENUINITY: GenuineRow[] = [
   { username: 'mythili', real_name: 'Mythili Nair', scored: 11, follow: null, agreement: null, status: 'too early', flags: [] },
   { username: 'swara', real_name: null, scored: 6, follow: null, agreement: null, status: 'too early', flags: [] },
 ]
+
+/** Per-challenge rows: the same cohort with different coverage and outcomes per challenge (deterministic, so the
+ *  chart is stable between loads). The Epstein Files uses the hand-written table above. */
+const hash = (s: string) => {
+  let h = 0
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return h
+}
+
+export function genuinityFor(slug: string): GenuineRow[] {
+  if (slug === 'epstein-files') return GENUINITY
+  const h = hash(slug)
+  return GENUINITY.filter((_, i) => ((h >> (i % 16)) & 3) !== 0).map((r, i) => {
+    if (r.scored < MIN_SCORED) return r
+    const jitter = 0.7 + ((h >> (i % 12)) & 7) / 20 // 0.7 .. 1.05
+    const follow = r.follow == null ? null : Math.min(0.95, Math.max(0.02, r.follow * jitter))
+    const scored = Math.max(MIN_SCORED, Math.round(r.scored * (0.35 + ((h >> (i % 10)) & 7) / 12)))
+    const status: GenuineRow['status'] = follow == null ? 'too early' : follow >= 0.15 ? (r.status === 'weak' ? 'watch' : 'ok') : follow >= 0.07 ? 'watch' : 'weak'
+    return { ...r, follow, scored, status, agreement: r.agreement == null ? null : Math.min(0.97, r.agreement * jitter) }
+  })
+}
